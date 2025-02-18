@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+:root {
+  --radius: 0.6rem;
+  --bg-light: #f8fafc; /* Light grayish background */
+  --bg-dark: #1a1a2e; /* Deep navy background */
+  --text-light: #1e293b; /* Dark gray text */
+  --text-dark: #e2e8f0; /* Light text for dark mode */
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--bg-light);
+  color: var(--text-light);
+}
+
+.dark body {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+/* Centering the content with proper spacing */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  /* padding: 2rem;
+  text-align: center; */
+}
+
+/* Card Styling
+.card {
+  padding: 2em;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Read-the-Docs */
