@@ -4,8 +4,9 @@ import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
+import SignInPage from "./pages/SignInPage.tsx";
+import SignUpPage from "./pages/SignUpPage.tsx";
 // import { Route } from "lucide-react";
-import { neobrutalism } from "@clerk/themes";
 
 // Import your Publishable Key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -19,14 +20,15 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ClerkProvider
         appearance={{
-          baseTheme: neobrutalism,
-          signIn: { baseTheme: neobrutalism },
+          // baseTheme: dark,
         }}
         publishableKey={PUBLISHABLE_KEY}
         afterSignOutUrl="/"
       >
         <Routes>
           <Route path="/" element={<App />} />{" "}
+          <Route path="/signin" element={<SignInPage />} />{" "}
+          <Route path="/signup" element={<SignUpPage />} />{" "}
         </Routes>
         {/* <App /> */}
       </ClerkProvider>
