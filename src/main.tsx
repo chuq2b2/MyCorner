@@ -21,6 +21,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ClerkProvider
         appearance={{
           // baseTheme: dark,
+          layout: {
+            unsafe_disableDevelopmentModeWarnings: true,
+          },
         }}
         publishableKey={PUBLISHABLE_KEY}
         afterSignOutUrl="/"
