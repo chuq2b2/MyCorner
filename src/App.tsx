@@ -1,6 +1,7 @@
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import HomePage from "./pages/HomePage";
 import { useNavigate } from "react-router-dom";
+import StarBackground from "./components/StarBackground";
 
 export default function App() {
   const navigate = useNavigate();
@@ -9,8 +10,14 @@ export default function App() {
     <>
       {/* Logged-out Page (Not Signin) */}
       <SignedOut>
+        {/* Background Star Layer */}
+        <StarBackground
+          safeZone={{ top: 30, bottom: 70, left: 20, right: 80 }}
+        />
+
         <div className="flex items-center justify-center h-screen w-full">
-          <div className="flex flex-col text-center border-5 border-b-50 p-4 md:bg-[url(/frame-transparent.png)] md:bg-center md:bg-no-repeat ">
+          {/* md:bg-[url(/frame-transparent.png)] md:bg-center md:bg-no-repeat  */}
+          <div className="flex flex-col text-center border-5 border-b-50 p-4 ">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -27,7 +34,7 @@ export default function App() {
               <rect x="2" y="6" width="14" height="12" rx="2" />
             </svg>
             <div className="p-8 md:p-32">
-              <p className="text-5xl mb-8 font-bold playwriteAR">
+              <p className="text-5xl font-bold playwriteAR border-4 p-8">
                 Welcome to MyCorner
               </p>
               <div className="flex flex-col md:flex-row md:justify-center md:gap-5 mt-3">

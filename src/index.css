@@ -65,7 +65,7 @@ h1 {
 
 button {
   border-radius: calc(infinity * 1px);
-  border: 2px solid black;
+  border: 3px solid black;
   padding: 0.2em 1.2em;
   font-size: 1em;
   font-weight: 500;
@@ -79,3 +79,18 @@ button:hover {
   color: tomato;
 }
 
+.stars-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* Ensure clicks go through */
+}
+
+.star {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  color: yellow;
+}
