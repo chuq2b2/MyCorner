@@ -17,8 +17,8 @@ export default function App() {
         />
 
         <div className="flex items-center justify-center h-screen w-full">
-          <div className="flex flex-col text-center border-5 border-b-50 p-4 ">
-            <Video fill="red"/>
+          <div className="flex flex-col text-center border-5  border-b-50 md:p-4 m-4 md:m-0 py-20">
+            <Video fill="red" className="ml-4 mb-8 md:m-0"/>
             <div className="p-8 md:p-32">
               <p className="text-5xl/15 font-bold playwriteAR border-4 p-8 m-2">
                 Welcome to MyCorner
