@@ -11,7 +11,7 @@ export default function HomePage() {
   return (
     <div className="w-full flex flex-col items-center justify-center">
       <NavBar />
-      <div className="text-5xl m-10 font-bold"> Welcome {user?.firstName} to MyCorner</div>
+      <div className="text-5xl m-10 font-bold"> Welcome {user?.username} to MyCorner</div>
       <p>Start Your Video Journal Journey Here</p>
     </div>
   );
