@@ -73,24 +73,6 @@ app.add_middleware(
 
 #     return hmac.compare_digest(signature, svix_signature)
 
-def extract_user_data(user_info: dict) -> dict:
-    """Extract relevant user data from Clerk user info."""
-    primary_email = next((
-        email for email in user_info.get("email_addresses", [])
-        if email.get("id") == user_info.get("primary_email_address_id")
-    ), {})
-
-    return {
-        "id": user_info["id"],
-        "email": primary_email.get("email_address"),
-        "first_name": user_info.get("first_name"),
-        "last_name": user_info.get("last_name"),
-        "username": user_info.get("username"),
-        "profile_image_url": user_info.get("profile_image_url"),
-        "last_sign_in": datetime.utcnow().isoformat(),
-        "created_at": user_info.get("created_at"),
-        "updated_at": user_info.get("updated_at"),
-    }
 
 @app.post("/sync-user")
 async def sync_user(request: Request):
@@ -100,6 +82,11 @@ async def sync_user(request: Request):
         user_id = data.get("user_id")
         created_at = data.get("created_at")
         last_sign_in = data.get("last_sign_in")
+        username = data.get("username")
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        profile_image_url = data.get("profile_image_url")
+        email = data.get("email")
 
         if not user_id:
             raise HTTPException(status_code=400, detail="Missing user_id")
@@ -112,7 +99,7 @@ async def sync_user(request: Request):
             logger.info(f"Updating last_sign_in for existing user: {user_id}")
             response = (
                 supabase.table("users")
-                .update({"last_sign_in": last_sign_in})
+                .update({"last_sign_in": last_sign_in, "username": username, "first_name": first_name, "last_name": last_name, "profile_image_url": profile_image_url, "email": email})
                 .eq("user_id", user_id)
                 .execute()
             )
@@ -122,7 +109,12 @@ async def sync_user(request: Request):
             user_data = {
                 "user_id": user_id,
                 "last_sign_in": last_sign_in,
-                "created_at": created_at
+                "created_at": created_at,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+                "profile_image_url": profile_image_url,
+                "email": email
             }
             response = supabase.table("users").insert(user_data).execute()
 
@@ -137,73 +129,6 @@ async def sync_user(request: Request):
         logger.error(f"Error in sync_user: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# @app.post("/")
-# async def user_signin(request: Request):
-#     """Update last_sign_in timestamp for user."""
-#     data = await request.json()
-#     token = data.get("token")
-
-#     if not token:
-#         raise HTTPException(status_code=400, detail="Missing token")
-
-#     try:
-#         # Get user info from Clerk
-#         user_info = get_clerk_user_data(token)
-#         user_id = user_info["id"]
-
-#         # Update last_sign_in
-#         response = (
-#             supabase.table("users")
-#             .update({"last_sign_in": datetime.utcnow().isoformat()})
-#             .eq("user_id", user_id)
-#             .execute()
-#         )
-
-#         if not response.get("data"):
-#             raise HTTPException(status_code=404, detail="User not found")
-
-#         return {"message": "Sign-in time updated successfully", "data": response.get("data")}
-        
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# @app.post("/webhook/clerk")
-# async def clerk_webhook(request: Request):
-#     """Handle Clerk webhooks for user data synchronization."""
-#     if not await verify_clerk_webhook(request):
-#         raise HTTPException(status_code=400, detail="Invalid webhook signature")
-
-#     data = await request.json()
-#     event_type = data.get("type")
-    
-#     if not event_type:
-#         raise HTTPException(status_code=400, detail="Missing event type")
-
-#     user_data = data.get("data", {})
-    
-#     if event_type == "user.created" or event_type == "user.updated":
-#         # Format user data and sync to Supabase
-#         formatted_data = {
-#             "id": user_data.get("id"),
-#             "email": user_data.get("email_addresses", [{}])[0].get("email_address"),
-#             "first_name": user_data.get("first_name"),
-#             "last_name": user_data.get("last_name"),
-#             "username": user_data.get("username"),
-#             "profile_image_url": user_data.get("profile_image_url"),
-#             "updated_at": datetime.utcnow().isoformat(),
-#         }
-        
-#         response = supabase.table("users").upsert([formatted_data]).execute()
-        
-#         if response.get("error"):
-#             raise HTTPException(status_code=500, detail="Failed to sync user data")
-            
-#     elif event_type == "user.deleted":
-#         user_id = user_data.get("id")
-#         if user_id:
-#             response = supabase.table("users").delete().eq("id", user_id).execute()
-            
-#             if response.get("error"):
-#                 raise HTTPException(status_code=500, detail="Failed to delete user")
-
-#     return {"message": f"Processed {event_type} event successfully"}
+@app.get("/")    
+def say_hello():
+    return {"message": "Hello, world!"}

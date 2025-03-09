@@ -4,29 +4,24 @@ import { useEffect } from "react";
 import axios from "axios";
 
 export default function HomePage() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
 
   useEffect(() => {
     async function syncUserData() {
-      if (!user || !isLoaded) return;
-
-      // // Create a unique key for this user session to prevent duplicate syncs
-      // const syncKey = `sync_${user.id}_${new Date().toDateString()}`;
-
-      // // Check if we've already synced for this user session
-      // if (localStorage.getItem(syncKey)) {
-      //   console.log("User already synced today, skipping");
-      //   return;
-      // }
+      if (!user) return;
 
       try {
         // Get user data from Clerk
         const userData = {
           user_id: user.id,
           created_at: user.createdAt,
-          last_sign_in: user.lastSignInAt, // Clerk provides this timestamp
+          last_sign_in: user.lastSignInAt, 
+          username: user.username,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.imageUrl,
+          email: user.emailAddresses[0].emailAddress,
         };
-
         // Sync with Supabase
         const response = await axios.post(
           "http://localhost:8000/sync-user",
@@ -38,16 +33,13 @@ export default function HomePage() {
           }
         );
         console.log("User data synced:", response.data);
-
-        // Mark as synced in localStorage
-        // localStorage.setItem(syncKey, "true");
       } catch (error) {
         console.error("Failed to sync user data:", error);
       }
     }
 
     syncUserData();
-  }, [user, isLoaded]); // Re-run when user object or loading state changes
+  }, [user]);
 
   return (
     <div className="w-full flex flex-col items-center justify-center">
