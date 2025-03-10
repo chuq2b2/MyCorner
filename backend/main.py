@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import hmac
 import hashlib
 import uuid
+import json
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +21,7 @@ load_dotenv(env_path)
 
 # Load environment variables
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
-CLERK_WEBHOOK_SECRET = os.getenv("CLERK_WEBHOOK_SECRET")
+CLERK_WEBHOOK_SECRET = os.getenv("CLERK_WEBHOOK_SECRET", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -39,40 +41,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# def get_clerk_user_data(token: str):
-#     """Fetch user data from Clerk using session token."""
-#     headers = {"Authorization": f"Bearer {token}"}
-#     response = requests.get("https://api.clerk.dev/v1/me", headers=headers)
-    
-#     if response.status_code != 200:
-#         raise HTTPException(status_code=response.status_code, detail="Failed to fetch user data")
-
-#     return response.json()
-
-# async def verify_clerk_webhook(request: Request) -> bool:
-#     """Verify that the webhook request came from Clerk."""
-#     if not CLERK_WEBHOOK_SECRET:
-#         raise HTTPException(status_code=500, detail="Clerk webhook secret not configured")
-
-#     svix_id = request.headers.get("svix-id")
-#     svix_timestamp = request.headers.get("svix-timestamp")
-#     svix_signature = request.headers.get("svix-signature")
-
-#     if not all([svix_id, svix_timestamp, svix_signature]):
-#         return False
-
-#     body = await request.body()
-    
-#     # Compute HMAC
-#     hmac_obj = hmac.new(
-#         CLERK_WEBHOOK_SECRET.encode(),
-#         f"{svix_id}.{svix_timestamp}.{body}".encode(),
-#         hashlib.sha256
-#     )
-#     signature = hmac_obj.hexdigest()
-
-#     return hmac.compare_digest(signature, svix_signature)
-
+@app.get("/")    
+def say_hello():
+    return {"message": "Hello, world!"}
 
 @app.post("/sync-user")
 async def sync_user(request: Request):
@@ -129,6 +100,176 @@ async def sync_user(request: Request):
         logger.error(f"Error in sync_user: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")    
-def say_hello():
-    return {"message": "Hello, world!"}
+
+@app.post("/test-webhook")
+async def test_webhook(request: Request):
+    """Test endpoint to simulate Clerk webhook for user deletion."""
+    try:
+        data = await request.json()
+        user_id = data.get("user_id")
+        
+        if not user_id:
+            return {"status": "error", "message": "Missing user_id parameter"}
+            
+        # Create a simulated webhook payload that exactly matches Clerk's format
+        webhook_payload = {
+            "data": {
+                "deleted": True,
+                "id": user_id,
+                "object": "user"
+            },
+            "event_attributes": {
+                "http_request": {
+                    "client_ip": "127.0.0.1",
+                    "user_agent": "Test Agent"
+                }
+            },
+            "object": "event",
+            "timestamp": int(time.time() * 1000),
+            "type": "user.deleted"
+        }
+        
+        # Log the payload
+        logger.info(f"Simulating Clerk webhook with payload: {webhook_payload}")
+        
+        # Check if user exists
+        check_user = supabase.table("users").select("*").eq("user_id", user_id).execute()
+        user_exists = check_user.data and len(check_user.data) > 0
+        
+        if not user_exists:
+            return {"status": "warning", "message": f"User {user_id} not found in Supabase, nothing to delete"}
+            
+        # Delete the user
+        response = (
+            supabase.table("users")
+            .delete()
+            .eq("user_id", user_id)
+            .execute()
+        )
+        
+        if hasattr(response, 'error') and response.error:
+            logger.error(f"Failed to delete user: {response.error}")
+            return {"status": "error", "message": str(response.error)}
+            
+        return {
+            "status": "success", 
+            "message": f"User {user_id} deleted successfully", 
+            "data": response.data,
+            "webhook_payload": webhook_payload
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in test webhook: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/webhook/clerk")
+async def clerk_webhook(request: Request):
+    """Handle Clerk webhooks for user events."""
+    try:
+        # Get the raw request body
+        body = await request.body()
+        payload_str = body.decode('utf-8')
+        
+        # Log the raw request for debugging
+        logger.info(f"Received webhook payload: {payload_str}")
+        
+        # Verify the webhook signature in production
+        if CLERK_WEBHOOK_SECRET:
+            # Get the signature from headers
+            clerk_signature = request.headers.get("svix-signature")
+            clerk_timestamp = request.headers.get("svix-timestamp")
+            clerk_id = request.headers.get("svix-id")
+            
+            if not (clerk_signature and clerk_timestamp and clerk_id):
+                logger.error("Missing Clerk webhook signature headers")
+                raise HTTPException(status_code=400, detail="Missing signature headers")
+                
+            # Create the signature payload
+            payload = f"{clerk_timestamp}.{clerk_id}.{payload_str}"
+            
+            # Compute HMAC
+            computed_signature = hmac.new(
+                CLERK_WEBHOOK_SECRET.encode("utf-8"),
+                payload.encode("utf-8"),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Verify the signature
+            if not hmac.compare_digest(computed_signature, clerk_signature):
+                logger.error("Invalid Clerk webhook signature")
+                raise HTTPException(status_code=401, detail="Invalid signature")
+        
+        # Parse the JSON data
+        try:
+            data = json.loads(payload_str)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON payload: {e}")
+            return {"status": "error", "message": "Invalid JSON payload"}
+        
+        # Log the entire webhook payload for debugging
+        logger.info(f"Processed webhook data: {data}")
+        
+        # Get the event type
+        event_type = data.get("type")
+        logger.info(f"Webhook event type: {event_type}")
+        
+        if not event_type:
+            logger.error("Missing event type in webhook payload")
+            return {"status": "error", "message": "Missing event type"}
+        
+        if event_type == "user.deleted":
+            # Extract user ID from the correct location in the payload
+            user_data = data.get("data", {})
+            user_id = user_data.get("id")
+            logger.info(f"Extracted user_id from webhook: {user_id}")
+            
+            if not user_id:
+                logger.error("Missing user_id in webhook payload")
+                return {"status": "error", "message": "Missing user_id"}
+                
+            logger.info(f"Attempting to delete user from Supabase: {user_id}")
+            
+            # Check if user exists before deletion
+            try:
+                check_user = supabase.table("users").select("*").eq("user_id", user_id).execute()
+                user_exists = check_user.data and len(check_user.data) > 0
+                logger.info(f"User record exists in database: {user_exists}")
+                
+                if not user_exists:
+                    logger.warning(f"User {user_id} not found in database, nothing to delete")
+                    return {"status": "success", "message": f"User {user_id} not found in database, nothing to delete"}
+                
+                # Delete the user from Supabase
+                response = (
+                    supabase.table("users")
+                    .delete()
+                    .eq("user_id", user_id)
+                    .execute()
+                )
+                
+                # Log the response for debugging
+                logger.info(f"Supabase delete response: {response}")
+                
+                if hasattr(response, 'error') and response.error:
+                    logger.error(f"Failed to delete user from Supabase: {response.error}")
+                    return {"status": "error", "message": f"Failed to delete user from Supabase: {response.error}"}
+                
+                # Log success outcome
+                logger.info(f"Successfully deleted user {user_id} from Supabase")
+                return {"status": "success", "message": f"User {user_id} deleted from Supabase"}
+                
+            except Exception as e:
+                logger.error(f"Database error when deleting user: {str(e)}")
+                return {"status": "error", "message": f"Database error: {str(e)}"}
+        else:
+            logger.info(f"Ignoring non-deletion event: {event_type}")
+            return {"status": "success", "message": f"Ignored {event_type} event"}
+        
+    except Exception as e:
+        logger.error(f"Webhook processing error: {str(e)}")
+        return {"status": "error", "message": f"Error: {str(e)}"}
+
+# Main entry point
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
