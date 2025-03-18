@@ -338,12 +338,12 @@ export default function VideoRecorder({ isOpen, onClose }: VideoRecorderProps) {
           </div>
         </div>
 
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex flex-row justify-end gap-2">
           <Button variant="destructive" onClick={handleClose}>
             Cancel
           </Button>
           {videoURL && (
-            <Button onClick={handleSave} className="flex items-center gap-2">
+            <Button size="icon" onClick={handleSave} className="flex items-center gap-2">
               <Download size={16} />
             </Button>
           )}
