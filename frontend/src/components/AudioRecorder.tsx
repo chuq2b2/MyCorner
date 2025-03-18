@@ -257,12 +257,16 @@ export default function AudioRecorder({ isOpen, onClose }: AudioRecorderProps) {
           )}
         </div>
 
-        <DialogFooter className="flex justify-between">
-          <Button variant="outline" onClick={handleClose}>
+        <DialogFooter className="flex flex-row justify-end gap-2">
+          <Button variant="outline" onClick={handleClose} className="w-auto">
             Cancel
           </Button>
           {audioURL && (
-            <Button onClick={handleSave} className="flex items-center gap-2">
+            <Button
+              size="icon"
+              onClick={handleSave}
+              className="flex items-center gap-2 sm:w-auto"
+            >
               <Download size={16} />
             </Button>
           )}

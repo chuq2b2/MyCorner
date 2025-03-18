@@ -15,7 +15,7 @@ export default function HomePage() {
         const userData = {
           user_id: user.id,
           created_at: user.createdAt,
-          last_sign_in: user.lastSignInAt, 
+          last_sign_in: user.lastSignInAt,
           username: user.username,
           first_name: user.firstName,
           last_name: user.lastName,
