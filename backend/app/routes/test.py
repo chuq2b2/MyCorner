@@ -9,11 +9,6 @@ router = APIRouter(tags=["test"])
 # Initialize Supabase client
 supabase = get_supabase_client()
 
-@router.get("/")
-def say_hello():
-    """Simple health check endpoint."""
-    return {"message": "Hello, world!"}
-
 @router.post("/test-webhook")
 async def test_webhook(request: Request):
     """Test endpoint to simulate Clerk webhook for user deletion."""

@@ -16,6 +16,7 @@ backend/
 │       ├── __init__.py
 │       ├── users.py        # User-related endpoints
 │       ├── webhooks.py     # Webhook handlers
+│       ├── sync.py         # Clerk-Supabase synchronization
 │       └── test.py         # Testing endpoints
 └── run.py                  # Server startup script
 ```
@@ -64,10 +65,21 @@ You can run the server in two ways:
 
 - `POST /webhook/clerk`: Handle Clerk webhook events (currently supports user deletion)
 
+### User Synchronization
+
+- `POST /sync/check-deletions`: Start a background task that checks all users in Supabase against Clerk and deletes any that no longer exist
+- `POST /sync/check-deletion/{user_id}`: Check a specific user against Clerk and delete if they don't exist
+
 ### Testing
 
 - `GET /`: Simple health check endpoint
 - `POST /test-webhook`: Test endpoint to simulate user deletion webhook
+
+## Automated Tasks
+
+The server includes a built-in scheduler that runs the following tasks:
+
+- User Synchronization: Runs daily at 3:00 AM to check all users in Supabase against Clerk and delete any that no longer exist
 
 ## Development
 
