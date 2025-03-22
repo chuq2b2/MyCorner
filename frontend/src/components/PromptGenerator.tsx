@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "./ui/dialog";
 import { Loader2, RefreshCw, Copy, Check } from "lucide-react";
 import { generatePrompt } from "../api/prompts";
@@ -144,6 +145,7 @@ export default function PromptGenerator({
         <DialogHeader>
           <DialogTitle className="text-white">Prompt Generator</DialogTitle>
         </DialogHeader>
+        <DialogDescription className="text-white">Generating a prompt for your recording</DialogDescription>
 
         <div className="flex flex-col space-y-4 py-4">
           <div className="flex flex-wrap gap-2 mb-2">

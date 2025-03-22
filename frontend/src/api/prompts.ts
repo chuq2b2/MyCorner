@@ -8,7 +8,7 @@ import { API_BASE_URL } from "./config";
 export async function generatePrompt(promptType: string): Promise<string> {
   // Create an AbortController to handle timeouts
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for longer model inference
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout for longer model inference
 
   try {
     const response = await fetch(`${API_BASE_URL}/prompts/generate`, {
