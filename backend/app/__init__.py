@@ -1,0 +1,3 @@
+"""
+MyCorner application package
+""" 
