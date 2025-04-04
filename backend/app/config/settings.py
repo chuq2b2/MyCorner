@@ -1,94 +1,51 @@
 import os
-from dotenv import load_dotenv
 import logging
-import boto3
-from botocore.exceptions import ClientError
-
-# Load environment variables
-load_dotenv()
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# AWS Configuration
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
-AWS_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
+# Load environment variables
+env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
+load_dotenv(env_path)
 
-# Initialize AWS S3 client
-try:
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        region_name=AWS_REGION
-    )
-    logger.info("AWS S3 client initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize AWS S3 client: {str(e)}")
-    s3_client = None
+# Clerk settings
+CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
+if not CLERK_SECRET_KEY:
+    logger.warning("CLERK_SECRET_KEY not found in environment variables")
+# Supabase settings
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-def upload_file_to_s3(file_path, object_name=None, metadata=None):
-    """Upload a file to an S3 bucket
+# CORS settings
+CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    # Add more origins as needed
+]
 
-    :param file_path: File to upload
-    :param object_name: S3 object name. If not specified then file_name is used
-    :param metadata: Optional metadata to attach to the file
-    :return: True if file was uploaded, else False
-    """
-    if not object_name:
-        object_name = os.path.basename(file_path)
-
+# Initialize Supabase client
+def get_supabase_client() -> Client:
+    """Initialize and return the Supabase client."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise ValueError("Missing Supabase configuration. Check your .env file.")
+    
     try:
-        extra_args = {'Metadata': metadata} if metadata else {}
-        s3_client.upload_file(file_path, AWS_BUCKET_NAME, object_name, ExtraArgs=extra_args)
-        logger.info(f"Successfully uploaded {object_name} to S3")
-        return True
-    except ClientError as e:
-        logger.error(f"Failed to upload {object_name} to S3: {str(e)}")
-        return False
+        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        return client
+    except Exception as e:
+        logger.error(f"Failed to initialize Supabase client: {str(e)}")
+        raise
 
-def get_s3_file_url(object_name):
-    """Generate a presigned URL for an S3 object
-
-    :param object_name: S3 object name
-    :return: Presigned URL as string. If error, returns None.
-    """
-    try:
-        url = s3_client.generate_presigned_url('get_object',
-                                             Params={'Bucket': AWS_BUCKET_NAME,
-                                                    'Key': object_name},
-                                             ExpiresIn=3600)  # URL expires in 1 hour
-        return url
-    except ClientError as e:
-        logger.error(f"Failed to generate presigned URL for {object_name}: {str(e)}")
-        return None
-
-def list_s3_files(prefix=''):
-    """List files in S3 bucket with optional prefix
-
-    :param prefix: Optional prefix to filter files
-    :return: List of dictionaries containing file information
-    """
-    try:
-        response = s3_client.list_objects_v2(Bucket=AWS_BUCKET_NAME, Prefix=prefix)
-        files = []
-        for obj in response.get('Contents', []):
-            file_info = {
-                'key': obj['Key'],
-                'last_modified': obj['LastModified'],
-                'size': obj['Size'],
-                'url': get_s3_file_url(obj['Key'])
-            }
-            try:
-                metadata = s3_client.head_object(Bucket=AWS_BUCKET_NAME, Key=obj['Key'])['Metadata']
-                file_info['metadata'] = metadata
-            except:
-                file_info['metadata'] = {}
-            files.append(file_info)
-        return sorted(files, key=lambda x: x['last_modified'], reverse=True)
-    except ClientError as e:
-        logger.error(f"Failed to list files in S3: {str(e)}")
-        return [] 
+# Validate configuration
+def validate_config():
+    """Validate that all required configuration variables are set."""
+    if not all([SUPABASE_URL, SUPABASE_KEY, CLERK_SECRET_KEY]):
+        raise ValueError("Missing required environment variables. Check your .env file.")
+    
+    # Test Supabase connection
+    get_supabase_client()
+    
+    return True 
