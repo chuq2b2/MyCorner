@@ -5,7 +5,7 @@ from apscheduler.triggers.cron import CronTrigger
 import asyncio
 
 from .config.settings import CORS_ORIGINS, validate_config, logger
-from .routes import users, test, sync, prompts
+from .routes import users, test, sync, prompts, recordings
 from .routes.sync import perform_user_sync
 
 # Validate configuration
@@ -35,6 +35,8 @@ app.include_router(users.router)
 app.include_router(test.router)
 app.include_router(sync.router)
 app.include_router(prompts.router)
+app.include_router(recordings.router)
+
 
 # Log application startup
 @app.on_event("startup")

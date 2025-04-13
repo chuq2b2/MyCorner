@@ -1,6 +1,7 @@
 import NavBar from "@/components/NavBar";
 import { useUser } from "@clerk/clerk-react";
 import { useEffect } from "react";
+import MediaList from "@/components/MediaList";
 import axios from "axios";
 
 export default function HomePage() {
@@ -49,6 +50,7 @@ export default function HomePage() {
         Welcome {user?.username} to MyCorner
       </div>
       <p>Start Your Video Journal Journey Here</p>
+      <MediaList />
     </div>
   );
 }

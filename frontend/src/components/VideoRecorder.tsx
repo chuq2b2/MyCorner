@@ -7,17 +7,24 @@ import {
   DialogTitle,
   DialogFooter,
 } from "./ui/dialog";
-import { Trash, RefreshCw, Download } from "lucide-react";
+import { Trash, RefreshCw, Download, Upload } from "lucide-react";
+import UploadDialog from "./UploadDialog";
 
 interface VideoRecorderProps {
   isOpen: boolean;
   onClose: () => void;
+  onUploadComplete?: () => void;
 }
 
-export default function VideoRecorder({ isOpen, onClose }: VideoRecorderProps) {
+export default function VideoRecorder({
+  isOpen,
+  onClose,
+  onUploadComplete,
+}: VideoRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const videoChunksRef = useRef<Blob[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -197,15 +204,26 @@ export default function VideoRecorder({ isOpen, onClose }: VideoRecorderProps) {
   };
 
   const handleSave = () => {
-    if (videoURL) {
-      // Here you would typically upload the video to your backend
-      // For now, we'll just download it locally
+    if (videoChunksRef.current.length > 0) {
+      const videoBlob = new Blob(videoChunksRef.current, {
+        type: "video/webm",
+      });
+      setShowUploadDialog(true);
+    }
+  };
+
+  const handleDownload = () => {
+    if (videoChunksRef.current.length > 0) {
+      const videoBlob = new Blob(videoChunksRef.current, {
+        type: "video/webm",
+      });
+      const url = URL.createObjectURL(videoBlob);
       const a = document.createElement("a");
-      a.href = videoURL;
+      a.href = url;
       a.download = `video_recording_${new Date().toISOString()}.webm`;
       a.click();
+      URL.revokeObjectURL(url);
     }
-    handleClose();
   };
 
   const handleDelete = () => {
@@ -246,109 +264,131 @@ export default function VideoRecorder({ isOpen, onClose }: VideoRecorderProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Record Video</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Record Video</DialogTitle>
+          </DialogHeader>
 
-        <div className="flex flex-col items-center justify-center py-6">
-          {videoURL ? (
-            <div className="w-full">
-              {/* Video Preview */}
-              <div className="w-full mb-4">
-                <video
-                  key={videoURL} /* Key forces re-render when URL changes */
-                  src={videoURL}
-                  controls
-                  className="w-full rounded-lg min-h-[400px] max-h-[600px] object-contain bg-black"
-                  autoPlay
-                  playsInline
-                />
-              </div>
+          <div className="flex flex-col items-center justify-center py-6">
+            {videoURL ? (
+              <div className="w-full">
+                {/* Video Preview */}
+                <div className="w-full mb-4">
+                  <video
+                    key={videoURL} /* Key forces re-render when URL changes */
+                    src={videoURL}
+                    controls
+                    className="w-full rounded-lg min-h-[400px] max-h-[600px] object-contain bg-black"
+                    autoPlay
+                    playsInline
+                  />
+                </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-center gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={handleReRecord}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw size={16} />
-                  Record Again
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="flex items-center gap-2"
-                >
-                  <Trash size={16} />
-                  Delete
-                </Button>
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleReRecord}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw size={16} />
+                    Record Again
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash size={16} />
+                    Delete
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="w-full">
-              {/* Camera Preview */}
-              <div className="relative w-full mb-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full rounded-lg border border-gray-300 min-h-[400px] max-h-[600px] object-contain bg-black"
-                />
-                {isRecording && (
-                  <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
-                    Recording
+            ) : (
+              <div className="w-full">
+                {/* Camera Preview */}
+                <div className="relative w-full mb-4">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full rounded-lg border border-gray-300 min-h-[400px] max-h-[600px] object-contain bg-black"
+                  />
+                  {isRecording && (
+                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
+                      Recording
+                    </div>
+                  )}
+                </div>
+
+                {streamError && (
+                  <div className="mt-2 text-red-500 text-center text-sm">
+                    {streamError}
                   </div>
                 )}
               </div>
+            )}
 
-              {streamError && (
-                <div className="mt-2 text-red-500 text-center text-sm">
-                  {streamError}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="mt-4 flex gap-4">
-            {isRecording ? (
-              <Button
-                variant="destructive"
-                onClick={stopRecording}
-                className="flex items-center gap-2"
-              >
-                <span className="h-3 w-3 rounded-full bg-white animate-pulse"></span>
-                Stop Recording
-              </Button>
-            ) : (
-              !videoURL && (
+            <div className="mt-4 flex gap-4">
+              {isRecording ? (
                 <Button
-                  onClick={startRecording}
+                  variant="destructive"
+                  onClick={stopRecording}
                   className="flex items-center gap-2"
                 >
-                  <span className="h-3 w-3 rounded-full bg-red-500"></span>
-                  Start Recording
+                  <span className="h-3 w-3 rounded-full bg-white animate-pulse"></span>
+                  Stop Recording
                 </Button>
-              )
-            )}
+              ) : (
+                !videoURL && (
+                  <Button
+                    onClick={startRecording}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="h-3 w-3 rounded-full bg-red-500"></span>
+                    Start Recording
+                  </Button>
+                )
+              )}
+            </div>
           </div>
-        </div>
 
-        <DialogFooter className="flex flex-row justify-end gap-2">
-          <Button variant="destructive" onClick={handleClose}>
-            Cancel
-          </Button>
-          {videoURL && (
-            <Button size="icon" onClick={handleSave} className="flex items-center gap-2">
-              <Download size={16} />
+          <DialogFooter className="flex flex-row justify-end gap-2">
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
             </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {videoURL && (
+              <>
+                <Button variant="outline" onClick={handleDownload}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+                <Button onClick={handleSave}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {showUploadDialog && videoChunksRef.current.length > 0 && (
+        <UploadDialog
+          isOpen={showUploadDialog}
+          onClose={() => setShowUploadDialog(false)}
+          file={new Blob(videoChunksRef.current, { type: "video/webm" })}
+          fileType="video"
+          onUploadComplete={() => {
+            onUploadComplete?.();
+            handleClose();
+          }}
+        />
+      )}
+    </>
   );
 }

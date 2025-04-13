@@ -9,73 +9,88 @@ import {
 } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Loader2 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+import { useUser } from "@clerk/clerk-react";
 
-interface MediaFile {
-  key: string;
-  url: string;
-  last_modified: string;
-  metadata: {
-    note?: string;
-    original_filename: string;
-    content_type: string;
-  };
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+interface Recording {
+  id: string;
+  user_id: string;
+  file_url: string;
+  file_type: "audio" | "video";
+  note: string | null;
+  created_at: string;
 }
 
 export default function MediaList() {
-  const [audioFiles, setAudioFiles] = useState<MediaFile[]>([]);
-  const [videoFiles, setVideoFiles] = useState<MediaFile[]>([]);
+  const [audioRecordings, setAudioRecordings] = useState<Recording[]>([]);
+  const [videoRecordings, setVideoRecordings] = useState<Recording[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("audio");
+  const { user } = useUser();
 
   useEffect(() => {
-    fetchMediaFiles();
-  }, []);
+    if (user) {
+      fetchRecordings();
+    }
+  }, [user]);
 
-  const fetchMediaFiles = async () => {
+  const fetchRecordings = async () => {
+    if (!user) return;
+
     setIsLoading(true);
     try {
-      // Fetch audio files
-      const audioResponse = await fetch("/api/media/list/audio");
-      const audioData = await audioResponse.json();
-      setAudioFiles(audioData.files);
+      const { data, error } = await supabase
+        .from("recordings")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      // Fetch video files
-      const videoResponse = await fetch("/api/media/list/video");
-      const videoData = await videoResponse.json();
-      setVideoFiles(videoData.files);
+      if (error) throw error;
+
+      const audio = data.filter((r) => r.file_type === "audio");
+      const video = data.filter((r) => r.file_type === "video");
+
+      setAudioRecordings(audio);
+      setVideoRecordings(video);
     } catch (error) {
-      console.error("Error fetching media files:", error);
+      console.error("Error fetching recordings:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderMediaFile = (file: MediaFile) => {
-    const isVideo = file.metadata.content_type.startsWith("video");
-    const date = new Date(file.last_modified);
+  const renderRecording = (recording: Recording) => {
+    const date = new Date(recording.created_at);
 
     return (
-      <Card key={file.key} className="mb-4">
+      <Card key={recording.id} className="mb-4">
         <CardHeader>
           <CardTitle className="text-lg">
-            {file.metadata.original_filename}
+            {recording.file_type === "audio"
+              ? "Audio Recording"
+              : "Video Recording"}
           </CardTitle>
           <CardDescription>{format(date, "PPP 'at' p")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {isVideo ? (
+          {recording.file_type === "video" ? (
             <video controls className="w-full rounded-lg">
-              <source src={file.url} type={file.metadata.content_type} />
+              <source src={recording.file_url} type="video/webm" />
               Your browser does not support the video tag.
             </video>
           ) : (
             <audio controls className="w-full">
-              <source src={file.url} type={file.metadata.content_type} />
+              <source src={recording.file_url} type="audio/webm" />
               Your browser does not support the audio tag.
             </audio>
           )}
-          {file.metadata.note && (
-            <p className="mt-2 text-sm text-gray-600">{file.metadata.note}</p>
+          {recording.note && (
+            <p className="mt-2 text-sm text-gray-600">{recording.note}</p>
           )}
         </CardContent>
       </Card>
@@ -99,23 +114,23 @@ export default function MediaList() {
         </TabsList>
         <TabsContent value="audio">
           <div className="space-y-4">
-            {audioFiles.length === 0 ? (
+            {audioRecordings.length === 0 ? (
               <p className="text-center text-gray-500 py-8">
                 No audio recordings yet
               </p>
             ) : (
-              audioFiles.map(renderMediaFile)
+              audioRecordings.map(renderRecording)
             )}
           </div>
         </TabsContent>
         <TabsContent value="video">
           <div className="space-y-4">
-            {videoFiles.length === 0 ? (
+            {videoRecordings.length === 0 ? (
               <p className="text-center text-gray-500 py-8">
                 No video recordings yet
               </p>
             ) : (
-              videoFiles.map(renderMediaFile)
+              videoRecordings.map(renderRecording)
             )}
           </div>
         </TabsContent>
