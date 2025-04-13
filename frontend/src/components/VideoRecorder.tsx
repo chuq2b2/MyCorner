@@ -365,7 +365,6 @@ export default function VideoRecorder({
               <>
                 <Button variant="outline" onClick={handleDownload}>
                   <Download className="mr-2 h-4 w-4" />
-                  Download
                 </Button>
                 <Button onClick={handleSave}>
                   <Upload className="mr-2 h-4 w-4" />

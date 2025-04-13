@@ -35,13 +35,11 @@ export default function UploadDialog({
 
     setIsUploading(true);
     try {
-      // Get the session token
-      const token = await getToken();
-
       // Create form data
       const formData = new FormData();
       formData.append("file", file);
       formData.append("file_type", fileType);
+      formData.append("user_id", user.id);
       if (note) {
         formData.append("note", note);
       }
@@ -49,20 +47,20 @@ export default function UploadDialog({
       // Upload to backend
       const response = await fetch("http://localhost:8000/recordings/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Upload failed");
+        throw new Error(data.detail || "Upload failed");
       }
 
       onUploadComplete();
       onClose();
     } catch (error) {
       console.error("Upload error:", error);
+      // You might want to show this error to the user
     } finally {
       setIsUploading(false);
     }

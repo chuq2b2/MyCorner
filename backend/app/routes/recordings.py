@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header, Form
 from typing import Optional
 from datetime import datetime
 import os
@@ -15,15 +15,14 @@ async def upload_recording(
     file: UploadFile = File(...),
     file_type: str = "audio",
     note: Optional[str] = None,
-    token: str = None
+    user_id: str = Form(...),
 ):
-    if not token:
-        raise HTTPException(status_code=401, detail="Missing authentication token")
-    
     try:
-        # Get user data from Clerk
-        user_data = get_clerk_user_data(token)
-        user_id = user_data["id"]
+        # Check if user exists in Supabase
+        user_response = supabase.table("users").select("id").eq("user_id", user_id).execute()
+        
+        if not user_response.data:
+            raise HTTPException(status_code=404, detail="User not found in database")
 
         # Generate a unique filename
         timestamp = datetime.now().timestamp()
@@ -38,7 +37,7 @@ async def upload_recording(
             {"contentType": f"{file_type}/webm"}
         )
 
-        if upload_response.error:
+        if not upload_response:
             raise HTTPException(status_code=500, detail="Failed to upload file")
 
         # Get the public URL
@@ -46,17 +45,19 @@ async def upload_recording(
 
         # Save to recordings table
         db_response = supabase.table("recordings").insert({
+            "created_at": datetime.now().isoformat(),
             "user_id": user_id,
             "file_url": public_url,
             "file_type": file_type,
             "note": note,
-            "created_at": datetime.now().isoformat()
         }).execute()
 
-        if db_response.error:
+        if not db_response.data:
             raise HTTPException(status_code=500, detail="Failed to save recording metadata")
 
         return {"message": "Recording uploaded successfully", "url": public_url}
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 

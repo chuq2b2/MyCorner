@@ -5,7 +5,13 @@ from apscheduler.triggers.cron import CronTrigger
 import asyncio
 
 from .config.settings import CORS_ORIGINS, validate_config, logger
-from .routes import users, test, sync, prompts, recordings
+from .routes import (
+    users_router,
+    test_router,
+    sync_router,
+    prompts_router,
+    recordings_router
+)
 from .routes.sync import perform_user_sync
 
 # Validate configuration
@@ -31,11 +37,11 @@ app.add_middleware(
 scheduler = AsyncIOScheduler()
 
 # Include routers
-app.include_router(users.router)
-app.include_router(test.router)
-app.include_router(sync.router)
-app.include_router(prompts.router)
-app.include_router(recordings.router)
+app.include_router(users_router)
+app.include_router(test_router)
+app.include_router(sync_router)
+app.include_router(prompts_router)
+app.include_router(recordings_router, prefix="/recordings", tags=["recordings"])
 
 
 # Log application startup
