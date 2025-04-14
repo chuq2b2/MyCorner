@@ -109,10 +109,10 @@ export default function MediaList() {
     );
 
     return (
-      <Card key={recording.id} className="mb-4 p-4 mx-8 ">
+      <Card key={recording.id} className="mb-4 p-4 mx-8 bg-amber-50">
         <div className="flex flex-col md:flex-row gap-4 items-start">
           {/* Media player on the left */}
-          <div className="w-full md:w-1/2">
+          <div className="w-full md:w-1/2 ">
             {recording.file_type === "video" ? (
               <video controls className="w-full">
                 <source src={recording.file_url} type="video/webm" />
@@ -130,11 +130,11 @@ export default function MediaList() {
 
           {/* Note and date on the right */}
           <div className="w-full md:w-1/2">
-            <CardTitle className="text-md mb-1 text-center md:text-left">
+            <CardTitle className="text-md mb-1 text-center md:text-left text-black">
               {format(localDate, "PPPP")}
             </CardTitle>
             {recording.note ? (
-              <p className="text-sm text-white whitespace-pre-line md:text-left text-center">
+              <p className="text-sm whitespace-pre-line md:text-left text-center text-black">
                 {recording.note}
               </p>
             ) : (

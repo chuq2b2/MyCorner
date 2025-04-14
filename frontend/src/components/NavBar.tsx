@@ -20,10 +20,8 @@ export default function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="w-full sm:w-2/3 flex items-center justify-between bg-black sm:rounded-full px-4 sm:px-6 py-3 max-w-screen-lg mx-auto">
-      <div className="text-white text-base font-bold sm:w-0 ">
-        MyCorner
-      </div>
+    <nav className="w-full sm:w-2/3 flex items-center justify-between bg-gray-900 sm:rounded-full px-4 sm:px-6 py-3 max-w-screen-lg mx-auto">
+      <div className="text-white text-base font-bold sm:w-0 ">MyCorner</div>
 
       {/* Desktop Navigation - Hidden on mobile */}
       <div className="hidden sm:flex items-center gap-4">
