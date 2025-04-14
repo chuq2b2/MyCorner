@@ -2,6 +2,8 @@ import React from "react";
 import { format } from "date-fns";
 import { CircleSmall } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
+import { toZonedTime } from "date-fns-tz";
+import { time } from "console";
 
 interface Props {
   dates: string[];
@@ -15,7 +17,7 @@ const RecordingDateSidebar: React.FC<Props> = ({
   onDateSelect,
 }) => {
   const { user } = useUser();
-
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return (
     <div className="border-r p-4">
       <h2 className="text-lg font-semibold my-8">Hi {user?.username}</h2>
@@ -33,7 +35,8 @@ const RecordingDateSidebar: React.FC<Props> = ({
                 selectedDate === date ? "selected" : ""
               }`}
             >
-              {format(new Date(date), "PPPP")}
+              
+              {format(toZonedTime(date, timezone), "PPPP")}
             </button>
           </li>
         ))}

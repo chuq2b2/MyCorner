@@ -151,36 +151,36 @@ export default function MediaList() {
         </button>
         <div className="flex flex-col md:flex-row gap-4 items-start">
           {/* Media player on the left */}
-          <div className="w-full md:w-1/2">
+          <div className="w-full md:w-1/2 ">
             {recording.file_type === "video" ? (
-              <video controls className="w-full">
+              <div className="aspect-video w-full max-w-xl rounded overflow-hidden">
+              <video controls className="w-full h-full object-cover">
                 <source src={recording.file_url} type="video/webm" />
                 Your browser does not support the video tag.
               </video>
-            ) : (
-              <div className="w-full bg-gray-800 rounded-lg p-4 flex items-center justify-center">
-                <audio controls className="max-w-full">
-                  <source src={recording.file_url} type="audio/webm" />
-                  Your browser does not support the audio tag.
-                </audio>
-              </div>
+            </div>
+          ) : (
+            <div className="w-full bg-gray-800 rounded-lg p-4 flex items-center justify-center">
+              <audio controls className="max-w-full">
+                <source src={recording.file_url} type="audio/webm" />
+                Your browser does not support the audio tag.
+              </audio>
+            </div>
             )}
           </div>
 
           {/* Note and date on the right */}
           <div className="w-full md:w-1/2">
-            <div>
-              <CardTitle className="text-md mb-1 text-center md:text-left text-black">
-                {format(localDate, "PPPP")}
-              </CardTitle>
-              {recording.note ? (
-                <p className="text-sm whitespace-pre-line md:text-left text-center text-black">
-                  {recording.note}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-400 italic">No notes added.</p>
-              )}
-            </div>
+            <CardTitle className="text-md mb-1 text-center md:text-left text-black">
+              {format(localDate, "PPPP")}
+            </CardTitle>
+            {recording.note ? (
+              <p className="text-sm whitespace-pre-line md:text-left text-center text-black">
+                {recording.note}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">No notes added.</p>
+            )}
           </div>
         </div>
       </Card>

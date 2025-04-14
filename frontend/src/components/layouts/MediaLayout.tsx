@@ -32,7 +32,7 @@ export default function MediaLayout({
 
       {/* Sidebar */}
       <div
-        className={`w-64 mt-4 h-[calc(100vh-8rem)] border-r bg-amber-100 transform transition-transform duration-200 ease-in-out z-40
+        className={`w-72 mt-4 h-[calc(100vh-8rem)] border-r bg-amber-100 transform transition-transform duration-200 ease-in-out z-40
       absolute md:relative
       ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
