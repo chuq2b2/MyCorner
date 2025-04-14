@@ -30,6 +30,7 @@ export default function UploadDialog({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { user } = useUser();
+  const typeToSend = fileType;
 
   const handleUpload = async () => {
     if (!user) return;
@@ -39,7 +40,7 @@ export default function UploadDialog({
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("file_type", fileType);
+    formData.append("file_type", typeToSend);
     formData.append("user_id", user.id);
     if (note) {
       formData.append("note", note);
