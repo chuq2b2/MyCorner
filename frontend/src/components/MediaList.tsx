@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import {
   Card,
   CardContent,
@@ -80,10 +81,12 @@ export default function MediaList() {
 
   useEffect(() => {
     if (selectedDate) {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       setFilteredRecordings(
-        recordings.filter(
-          (r) => format(new Date(r.created_at), "yyyy-MM-dd") === selectedDate
-        )
+        recordings.filter((r) => {
+          const localDate = toZonedTime(r.created_at, timezone);
+          return format(localDate, "yyyy-MM-dd") === selectedDate;
+        })
       );
     } else {
       setFilteredRecordings(recordings);
@@ -95,7 +98,10 @@ export default function MediaList() {
   ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   const renderRecording = (recording: Recording) => {
-    const date = new Date(recording.created_at);
+    const localDate = toZonedTime(
+      recording.created_at,
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+    );
 
     return (
       <Card
@@ -121,7 +127,7 @@ export default function MediaList() {
           {/* Note and date on the right */}
           <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
             <CardTitle className="text-md mb-1">
-              {format(date, "PPPP")}
+              {format(localDate, "PPPP")}
             </CardTitle>
             {recording.note ? (
               <p className="text-sm text-gray-700 whitespace-pre-line">
@@ -146,10 +152,16 @@ export default function MediaList() {
 
   return (
     <div className="flex flex-col md:flex-row">
-      <RecordingDateSidebar dates={availableDates} onSelectDate={setSelectedDate} />
+      <RecordingDateSidebar
+        dates={availableDates}
+        selectedDate={selectedDate}
+        onDateSelect={setSelectedDate}
+      />
       <div className="flex-1 px-4 py-8">
         {filteredRecordings.length === 0 ? (
-          <p className="text-center text-gray-500">No recordings for this date.</p>
+          <p className="text-center text-gray-500">
+            No recordings for this date.
+          </p>
         ) : (
           <div className="space-y-4">
             {filteredRecordings.map(renderRecording)}
