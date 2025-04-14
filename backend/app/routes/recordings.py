@@ -14,7 +14,7 @@ supabase = get_supabase_client()
 async def upload_recording(
     file: UploadFile = File(...),
     file_type: str = "audio",
-    note: Optional[str] = None,
+    note: str = Form(None),
     user_id: str = Form(...),
 ):
     try:
@@ -42,7 +42,7 @@ async def upload_recording(
 
         # Get the public URL
         public_url = supabase.storage.from_("recordings").get_public_url(filename)
-
+        print("Note received:", note)
         # Save to recordings table
         db_response = supabase.table("recordings").insert({
             "created_at": datetime.now().isoformat(),
