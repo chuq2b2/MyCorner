@@ -6,6 +6,7 @@ import axios from "axios";
 
 export default function HomePage() {
   const { user } = useUser();
+  
 
   useEffect(() => {
     async function syncUserData() {

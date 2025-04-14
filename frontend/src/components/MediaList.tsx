@@ -10,6 +10,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useUser } from "@clerk/clerk-react";
+import RecordingDateSidebar from "./RecordingDateSideBar";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -26,9 +27,10 @@ interface Recording {
 }
 
 export default function MediaList() {
-  const [audioRecordings, setAudioRecordings] = useState<Recording[]>([]);
-  const [videoRecordings, setVideoRecordings] = useState<Recording[]>([]);
   const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [filteredRecordings, setFilteredRecordings] = useState<Recording[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("audio");
   const { user, isLoaded } = useUser();
@@ -45,7 +47,7 @@ export default function MediaList() {
       console.log("No user found when trying to fetch recordings.");
       return;
     }
-  
+
     console.log("Fetching recordings for user:", user.id);
 
     setIsLoading(true);
@@ -53,7 +55,7 @@ export default function MediaList() {
       const { data, error } = await supabase
         .from("recordings")
         .select("*")
-        // .eq("user_id", user.id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       console.log("Supabase data:", data);
       console.log("Supabase error:", error);
@@ -62,8 +64,6 @@ export default function MediaList() {
       const audio = data.filter((r) => r.file_type === "audio");
       const video = data.filter((r) => r.file_type === "video");
 
-      setAudioRecordings(audio);
-      setVideoRecordings(video);
       setRecordings(
         [...audio, ...video].sort(
           (a, b) =>
@@ -78,42 +78,61 @@ export default function MediaList() {
     }
   };
 
+  useEffect(() => {
+    if (selectedDate) {
+      setFilteredRecordings(
+        recordings.filter(
+          (r) => format(new Date(r.created_at), "yyyy-MM-dd") === selectedDate
+        )
+      );
+    } else {
+      setFilteredRecordings(recordings);
+    }
+  }, [selectedDate, recordings]);
+
+  const availableDates = Array.from(
+    new Set(recordings.map((r) => format(new Date(r.created_at), "yyyy-MM-dd")))
+  ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
   const renderRecording = (recording: Recording) => {
     const date = new Date(recording.created_at);
 
     return (
-      <Card key={recording.id} className="mb-4 p-4 max-w-full md:max-w-[50%] mx-auto">
-  <div className="flex flex-col md:flex-row gap-4 items-start">
-    {/* Media player on the left */}
-    <div className="w-full md:w-1/2">
-      {recording.file_type === "video" ? (
-        <video controls className="w-full rounded-lg">
-          <source src={recording.file_url} type="video/webm" />
-          Your browser does not support the video tag.
-        </video>
-      ) : (
-        <audio controls className="w-full">
-          <source src={recording.file_url} type="audio/webm" />
-          Your browser does not support the audio tag.
-        </audio>
-      )}
-    </div>
+      <Card
+        key={recording.id}
+        className="mb-4 p-4 max-w-full md:max-w-[50%] mx-auto"
+      >
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          {/* Media player on the left */}
+          <div className="w-full md:w-1/2">
+            {recording.file_type === "video" ? (
+              <video controls className="w-full rounded-lg">
+                <source src={recording.file_url} type="video/webm" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <audio controls className="w-full">
+                <source src={recording.file_url} type="audio/webm" />
+                Your browser does not support the audio tag.
+              </audio>
+            )}
+          </div>
 
-    {/* Note and date on the right */}
-    <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
-      <CardTitle className="text-md mb-1">
-        {format(date, "PPPP")}
-      </CardTitle>
-      {recording.note ? (
-        <p className="text-sm text-gray-700 whitespace-pre-line">
-          {recording.note}
-        </p>
-      ) : (
-        <p className="text-sm text-gray-400 italic">No notes added.</p>
-      )}
-    </div>
-  </div>
-</Card>
+          {/* Note and date on the right */}
+          <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
+            <CardTitle className="text-md mb-1">
+              {format(date, "PPPP")}
+            </CardTitle>
+            {recording.note ? (
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {recording.note}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">No notes added.</p>
+            )}
+          </div>
+        </div>
+      </Card>
     );
   };
 
@@ -126,14 +145,26 @@ export default function MediaList() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {recordings.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">
-          You have no recordings yet.
-        </p>
-      ) : (
-        <div className="space-y-4">{recordings.map(renderRecording)}</div>
-      )}
+    <div className="flex flex-col md:flex-row">
+      <RecordingDateSidebar dates={availableDates} onSelectDate={setSelectedDate} />
+      <div className="flex-1 px-4 py-8">
+        {filteredRecordings.length === 0 ? (
+          <p className="text-center text-gray-500">No recordings for this date.</p>
+        ) : (
+          <div className="space-y-4">
+            {filteredRecordings.map(renderRecording)}
+          </div>
+        )}
+      </div>
     </div>
+    // <div className="container mx-auto px-4 py-8">
+    //   {recordings.length === 0 ? (
+    //     <p className="text-center text-gray-500 py-8">
+    //       You have no recordings yet.
+    //     </p>
+    //   ) : (
+    //     <div className="space-y-4">{recordings.map(renderRecording)}</div>
+    //   )}
+    // </div>
   );
 }
