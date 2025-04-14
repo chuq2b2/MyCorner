@@ -1,6 +1,7 @@
 import React from "react";
 import { format } from "date-fns";
 import { CircleSmall } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 
 interface Props {
   dates: string[];
@@ -13,9 +14,15 @@ const RecordingDateSidebar: React.FC<Props> = ({
   selectedDate,
   onDateSelect,
 }) => {
+  const { user } = useUser();
+
   return (
     <div className="border-r p-4">
-      <h2 className="text-lg font-semibold mb-2">Select a Date</h2>
+      <h2 className="text-lg font-semibold my-8">Hi {user?.username}</h2>
+
+      <h3 className="text-md font-light italic mb-2">
+        {dates.length == 0 ? "Start recording your entries" : "Check out your entries"}
+        </h3>
       <ul className="space-y-2">
         {dates.map((date) => (
           <li key={date} className="flex flex-row items-center">

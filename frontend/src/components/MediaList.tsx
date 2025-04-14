@@ -11,7 +11,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useUser } from "@clerk/clerk-react";
-import RecordingDateSidebar from "./RecordingDateSideBar";
+import MediaLayout from "./layouts/MediaLayout";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -102,50 +102,6 @@ export default function MediaList() {
     )
   ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  // const renderRecording = (recording: Recording) => {
-  //   const localDate = toZonedTime(
-  //     recording.created_at,
-  //     Intl.DateTimeFormat().resolvedOptions().timeZone
-  //   );
-
-  //   return (
-  //     <Card
-  //       key={recording.id}
-  //       className="mb-4 p-4 max-w-full md:max-w-[50%] mx-auto"
-  //     >
-  //       <div className="flex flex-col md:flex-row gap-4 items-start">
-  //         {/* Media player on the left */}
-  //         <div className="w-full md:w-1/2">
-  //           {recording.file_type === "video" ? (
-  //             <video controls className="w-full rounded-lg">
-  //               <source src={recording.file_url} type="video/webm" />
-  //               Your browser does not support the video tag.
-  //             </video>
-  //           ) : (
-  //             <audio controls className="w-full  rounded-lg">
-  //               <source src={recording.file_url} type="audio/webm" />
-  //               Your browser does not support the audio tag.
-  //             </audio>
-  //           )}
-  //         </div>
-
-  //         {/* Note and date on the right */}
-  //         <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
-  //           <CardTitle className="text-md mb-1">
-  //             {format(localDate, "PPPP")}
-  //           </CardTitle>
-  //           {recording.note ? (
-  //             <p className="text-sm text-white whitespace-pre-line">
-  //               {recording.note}
-  //             </p>
-  //           ) : (
-  //             <p className="text-sm text-gray-400 italic">No notes added.</p>
-  //           )}
-  //         </div>
-  //       </div>
-  //     </Card>
-  //   );
-  // };
   const renderRecording = (recording: Recording) => {
     const localDate = toZonedTime(
       recording.created_at,
@@ -199,13 +155,12 @@ export default function MediaList() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <RecordingDateSidebar
-        dates={availableDates}
-        selectedDate={selectedDate}
-        onDateSelect={setSelectedDate}
-      />
-      <div className=" px-4 py-8">
+    <MediaLayout
+      dates={availableDates}
+      selectedDate={selectedDate}
+      onDateSelect={setSelectedDate}
+    >
+      <div className="px-4 py-8">
         {filteredRecordings.length === 0 ? (
           <p className="text-center text-gray-500">
             No recordings for this date.
@@ -216,6 +171,6 @@ export default function MediaList() {
           </div>
         )}
       </div>
-    </div>
+    </MediaLayout>
   );
 }

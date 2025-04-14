@@ -6,7 +6,6 @@ import axios from "axios";
 
 export default function HomePage() {
   const { user } = useUser();
-  
 
   useEffect(() => {
     async function syncUserData() {
@@ -46,10 +45,6 @@ export default function HomePage() {
   return (
     <div className="w-full flex flex-col items-center justify-center">
       <NavBar />
-      <div className="text-5xl m-10 font-bold">
-        {" "}
-        This MyCorner belongs to {user?.username} 
-      </div>
       <MediaList />
     </div>
   );
