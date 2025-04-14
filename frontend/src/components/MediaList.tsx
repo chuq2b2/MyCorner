@@ -93,16 +93,65 @@ export default function MediaList() {
     }
   }, [selectedDate, recordings]);
 
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const availableDates = Array.from(
-    new Set(recordings.map((r) => format(new Date(r.created_at), "yyyy-MM-dd")))
+    new Set(
+      recordings.map((r) =>
+        format(toZonedTime(r.created_at, timezone), "yyyy-MM-dd")
+      )
+    )
   ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
+  // const renderRecording = (recording: Recording) => {
+  //   const localDate = toZonedTime(
+  //     recording.created_at,
+  //     Intl.DateTimeFormat().resolvedOptions().timeZone
+  //   );
+
+  //   return (
+  //     <Card
+  //       key={recording.id}
+  //       className="mb-4 p-4 max-w-full md:max-w-[50%] mx-auto"
+  //     >
+  //       <div className="flex flex-col md:flex-row gap-4 items-start">
+  //         {/* Media player on the left */}
+  //         <div className="w-full md:w-1/2">
+  //           {recording.file_type === "video" ? (
+  //             <video controls className="w-full rounded-lg">
+  //               <source src={recording.file_url} type="video/webm" />
+  //               Your browser does not support the video tag.
+  //             </video>
+  //           ) : (
+  //             <audio controls className="w-full  rounded-lg">
+  //               <source src={recording.file_url} type="audio/webm" />
+  //               Your browser does not support the audio tag.
+  //             </audio>
+  //           )}
+  //         </div>
+
+  //         {/* Note and date on the right */}
+  //         <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
+  //           <CardTitle className="text-md mb-1">
+  //             {format(localDate, "PPPP")}
+  //           </CardTitle>
+  //           {recording.note ? (
+  //             <p className="text-sm text-white whitespace-pre-line">
+  //               {recording.note}
+  //             </p>
+  //           ) : (
+  //             <p className="text-sm text-gray-400 italic">No notes added.</p>
+  //           )}
+  //         </div>
+  //       </div>
+  //     </Card>
+  //   );
+  // };
   const renderRecording = (recording: Recording) => {
     const localDate = toZonedTime(
       recording.created_at,
       Intl.DateTimeFormat().resolvedOptions().timeZone
     );
-
+  
     return (
       <Card
         key={recording.id}
@@ -112,25 +161,30 @@ export default function MediaList() {
           {/* Media player on the left */}
           <div className="w-full md:w-1/2">
             {recording.file_type === "video" ? (
-              <video controls className="w-full rounded-lg">
+              <video
+                controls
+                className="w-full rounded-lg"
+              >
                 <source src={recording.file_url} type="video/webm" />
                 Your browser does not support the video tag.
               </video>
             ) : (
-              <audio controls className="w-full">
-                <source src={recording.file_url} type="audio/webm" />
-                Your browser does not support the audio tag.
-              </audio>
+              <div className="w-full bg-gray-800 rounded-lg p-4 flex items-center justify-center">
+                <audio controls className="w-full">
+                  <source src={recording.file_url} type="audio/webm" />
+                  Your browser does not support the audio tag.
+                </audio>
+              </div>
             )}
           </div>
-
+  
           {/* Note and date on the right */}
-          <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
+          <div className="w-full md:w-1/2">
             <CardTitle className="text-md mb-1">
               {format(localDate, "PPPP")}
             </CardTitle>
             {recording.note ? (
-              <p className="text-sm text-gray-700 whitespace-pre-line">
+              <p className="text-sm text-white whitespace-pre-line">
                 {recording.note}
               </p>
             ) : (
@@ -157,26 +211,17 @@ export default function MediaList() {
         selectedDate={selectedDate}
         onDateSelect={setSelectedDate}
       />
-      <div className="flex-1 px-4 py-8">
+      <div className=" px-4 py-8">
         {filteredRecordings.length === 0 ? (
           <p className="text-center text-gray-500">
             No recordings for this date.
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="w-full">
             {filteredRecordings.map(renderRecording)}
           </div>
         )}
       </div>
     </div>
-    // <div className="container mx-auto px-4 py-8">
-    //   {recordings.length === 0 ? (
-    //     <p className="text-center text-gray-500 py-8">
-    //       You have no recordings yet.
-    //     </p>
-    //   ) : (
-    //     <div className="space-y-4">{recordings.map(renderRecording)}</div>
-    //   )}
-    // </div>
   );
 }
