@@ -63,7 +63,7 @@ h1 {
 }
 
 
-button {
+.button-star {
   border-radius: calc(infinity * 1px);
   border: 3px solid black;
   padding: 0.2em 1.2em;
@@ -74,9 +74,28 @@ button {
   transition: border-color 0.25s;
   /* color: rgba(255, 255, 255, 0.87); */
 }
-button:hover {
+.button-star:hover {
   border-color: whitesmoke;
   color: tomato;
+}
+
+.button-select {
+  padding: 0.2em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: text-decoration 0.25s, color 0.25s;
+  border: none;
+  text-decoration: none;
+}
+
+.button-select:hover {
+  text-decoration: underline;
+}
+
+.button-select.selected {
+  text-decoration: underline;
 }
 
 .stars-container {

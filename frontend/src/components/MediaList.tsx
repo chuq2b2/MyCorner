@@ -151,40 +151,34 @@ export default function MediaList() {
       recording.created_at,
       Intl.DateTimeFormat().resolvedOptions().timeZone
     );
-  
+
     return (
-      <Card
-        key={recording.id}
-        className="mb-4 p-4 max-w-full md:max-w-[50%] mx-auto"
-      >
+      <Card key={recording.id} className="mb-4 p-4 mx-8 ">
         <div className="flex flex-col md:flex-row gap-4 items-start">
           {/* Media player on the left */}
           <div className="w-full md:w-1/2">
             {recording.file_type === "video" ? (
-              <video
-                controls
-                className="w-full rounded-lg"
-              >
+              <video controls className="w-full">
                 <source src={recording.file_url} type="video/webm" />
                 Your browser does not support the video tag.
               </video>
             ) : (
               <div className="w-full bg-gray-800 rounded-lg p-4 flex items-center justify-center">
-                <audio controls className="w-full">
+                <audio controls className="max-w-full">
                   <source src={recording.file_url} type="audio/webm" />
                   Your browser does not support the audio tag.
                 </audio>
               </div>
             )}
           </div>
-  
+
           {/* Note and date on the right */}
           <div className="w-full md:w-1/2">
-            <CardTitle className="text-md mb-1">
+            <CardTitle className="text-md mb-1 text-center md:text-left">
               {format(localDate, "PPPP")}
             </CardTitle>
             {recording.note ? (
-              <p className="text-sm text-white whitespace-pre-line">
+              <p className="text-sm text-white whitespace-pre-line md:text-left text-center">
                 {recording.note}
               </p>
             ) : (

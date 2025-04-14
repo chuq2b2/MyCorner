@@ -25,13 +25,13 @@ export default function App() {
               </p>
               <div className="flex flex-col md:flex-row md:justify-center md:gap-5 mt-3">
                 <button
-                  className="w-2/3 mx-auto md:mx-0 md:w-auto mb-2 md:mb-0"
+                  className="w-2/3 mx-auto md:mx-0 md:w-auto mb-2 md:mb-0 button-star"
                   onClick={() => navigate("/signin")}
                 >
                   Sign In
                 </button>
                 <button
-                  className="w-2/3 mx-auto md:mx-0 md:w-auto"
+                  className="w-2/3 mx-auto md:mx-0 md:w-auto button-star"
                   onClick={() => navigate("/signup")}
                 >
                   Sign Up

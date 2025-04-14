@@ -48,7 +48,7 @@ export default function HomePage() {
       <NavBar />
       <div className="text-5xl m-10 font-bold">
         {" "}
-        Welcome {user?.username} to MyCorner
+        This MyCorner belongs to {user?.username} 
       </div>
       <MediaList />
     </div>
