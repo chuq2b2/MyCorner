@@ -268,7 +268,7 @@ export default function VideoRecorder({
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Record Video</DialogTitle>
+            <DialogTitle className="text-white">Record Video</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col items-center justify-center py-6">
@@ -363,8 +363,8 @@ export default function VideoRecorder({
             </Button>
             {videoURL && (
               <>
-                <Button variant="outline" onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
+                <Button size="icon" onClick={handleDownload}>
+                  <Download size={16} />
                 </Button>
                 <Button onClick={handleSave}>
                   <Upload className="mr-2 h-4 w-4" />

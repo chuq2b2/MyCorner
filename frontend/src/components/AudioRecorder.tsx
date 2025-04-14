@@ -184,7 +184,7 @@ export default function AudioRecorder({
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Record Audio</DialogTitle>
+            <DialogTitle className="text-white">Record Audio</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col items-center justify-center py-6">

@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "./ui/dialog";
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 
 interface UploadDialogProps {
   isOpen: boolean;
@@ -28,7 +28,6 @@ export default function UploadDialog({
   const [note, setNote] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const { user } = useUser();
-  const { getToken } = useAuth();
 
   const handleUpload = async () => {
     if (!user) return;
