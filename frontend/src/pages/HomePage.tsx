@@ -49,7 +49,6 @@ export default function HomePage() {
         {" "}
         Welcome {user?.username} to MyCorner
       </div>
-      <p>Start Your Video Journal Journey Here</p>
       <MediaList />
     </div>
   );

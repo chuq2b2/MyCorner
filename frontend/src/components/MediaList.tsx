@@ -82,38 +82,38 @@ export default function MediaList() {
     const date = new Date(recording.created_at);
 
     return (
-      <Card key={recording.id} className="mb-4 p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-start">
-          {/* Media player on the left */}
-          <div className="w-full md:w-1/2">
-            {recording.file_type === "video" ? (
-              <video controls className="w-full rounded-lg">
-                <source src={recording.file_url} type="video/webm" />
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <audio controls className="w-full">
-                <source src={recording.file_url} type="audio/webm" />
-                Your browser does not support the audio tag.
-              </audio>
-            )}
-          </div>
+      <Card key={recording.id} className="mb-4 p-4 max-w-full md:max-w-[50%] mx-auto">
+  <div className="flex flex-col md:flex-row gap-4 items-start">
+    {/* Media player on the left */}
+    <div className="w-full md:w-1/2">
+      {recording.file_type === "video" ? (
+        <video controls className="w-full rounded-lg">
+          <source src={recording.file_url} type="video/webm" />
+          Your browser does not support the video tag.
+        </video>
+      ) : (
+        <audio controls className="w-full">
+          <source src={recording.file_url} type="audio/webm" />
+          Your browser does not support the audio tag.
+        </audio>
+      )}
+    </div>
 
-          {/* Note and date on the right */}
-          <div className="w-full md:w-1/2">
-            <CardTitle className="text-md mb-1">
-              {format(date, "PPPPpp")}
-            </CardTitle>
-            {recording.note ? (
-              <p className="text-sm text-gray-700 whitespace-pre-line">
-                {recording.note}
-              </p>
-            ) : (
-              <p className="text-sm text-gray-400 italic">No notes added.</p>
-            )}
-          </div>
-        </div>
-      </Card>
+    {/* Note and date on the right */}
+    <div className="w-full md:w-1/2 max-h-32 overflow-y-auto">
+      <CardTitle className="text-md mb-1">
+        {format(date, "PPPP")}
+      </CardTitle>
+      {recording.note ? (
+        <p className="text-sm text-gray-700 whitespace-pre-line">
+          {recording.note}
+        </p>
+      ) : (
+        <p className="text-sm text-gray-400 italic">No notes added.</p>
+      )}
+    </div>
+  </div>
+</Card>
     );
   };
 

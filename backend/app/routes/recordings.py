@@ -13,7 +13,7 @@ supabase = get_supabase_client()
 @router.post("/upload")
 async def upload_recording(
     file: UploadFile = File(...),
-    file_type: str = "audio",
+    file_type: str = Form(...),
     note: str = Form(None),
     user_id: str = Form(...),
 ):
