@@ -60,6 +60,7 @@ export default function UploadDialog({
       if (xhr.status >= 200 && xhr.status < 300) {
         onUploadComplete();
         onClose();
+        window.location.reload(); // Refresh the page after successful upload
       } else {
         console.error("Upload error:", xhr.responseText);
         // Show error to user here
@@ -74,6 +75,8 @@ export default function UploadDialog({
 
     xhr.open("POST", "http://localhost:8000/recordings/upload");
     xhr.send(formData);
+
+    
   };
 
   return (

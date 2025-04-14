@@ -8,10 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useUser } from "@clerk/clerk-react";
 import MediaLayout from "./layouts/MediaLayout";
+import { Button } from "./ui/button";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -102,6 +103,36 @@ export default function MediaList() {
     )
   ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
+  const handleDeleteRecording = async (recording: Recording) => {
+    try {
+      // Delete from storage
+      const filePath = recording.file_url.split("/").pop();
+      if (filePath) {
+        const { error: storageError } = await supabase.storage
+          .from("recordings")
+          .remove([filePath]);
+
+        if (storageError) throw storageError;
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from("recordings")
+        .delete()
+        .eq("id", recording.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setRecordings((prev) => prev.filter((r) => r.id !== recording.id));
+      setFilteredRecordings((prev) =>
+        prev.filter((r) => r.id !== recording.id)
+      );
+    } catch (error) {
+      console.error("Error deleting recording:", error);
+    }
+  };
+
   const renderRecording = (recording: Recording) => {
     const localDate = toZonedTime(
       recording.created_at,
@@ -109,10 +140,18 @@ export default function MediaList() {
     );
 
     return (
-      <Card key={recording.id} className="mb-4 p-4 mx-8 bg-amber-50">
+      <Card key={recording.id} className="mb-4 p-4 mx-8 bg-amber-50 relative">
+        <button
+          // variant="ghost"
+          // size="icon"
+          className="absolute right-2 top-2 bg-amber-50 hover:bg-red-300"
+          onClick={() => handleDeleteRecording(recording)}
+        >
+          <X className="h-4 w-4 text-black" />
+        </button>
         <div className="flex flex-col md:flex-row gap-4 items-start">
           {/* Media player on the left */}
-          <div className="w-full md:w-1/2 ">
+          <div className="w-full md:w-1/2">
             {recording.file_type === "video" ? (
               <video controls className="w-full">
                 <source src={recording.file_url} type="video/webm" />
@@ -130,16 +169,18 @@ export default function MediaList() {
 
           {/* Note and date on the right */}
           <div className="w-full md:w-1/2">
-            <CardTitle className="text-md mb-1 text-center md:text-left text-black">
-              {format(localDate, "PPPP")}
-            </CardTitle>
-            {recording.note ? (
-              <p className="text-sm whitespace-pre-line md:text-left text-center text-black">
-                {recording.note}
-              </p>
-            ) : (
-              <p className="text-sm text-gray-400 italic">No notes added.</p>
-            )}
+            <div>
+              <CardTitle className="text-md mb-1 text-center md:text-left text-black">
+                {format(localDate, "PPPP")}
+              </CardTitle>
+              {recording.note ? (
+                <p className="text-sm whitespace-pre-line md:text-left text-center text-black">
+                  {recording.note}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">No notes added.</p>
+              )}
+            </div>
           </div>
         </div>
       </Card>

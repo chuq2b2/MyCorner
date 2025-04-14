@@ -122,7 +122,7 @@ export default function AudioRecorder({
     }
   };
 
-  const handleSave = () => {
+  const handleUpload = () => {
     if (audioChunksRef.current.length > 0) {
       const audioBlob = new Blob(audioChunksRef.current, {
         type: "audio/webm",
@@ -261,7 +261,7 @@ export default function AudioRecorder({
                 >
                   <Download size={16} />
                 </Button>
-                <Button onClick={handleSave}>
+                <Button onClick={handleUpload}>
                   <Upload className="mr-2 h-4 w-4" />
                   Upload
                 </Button>
