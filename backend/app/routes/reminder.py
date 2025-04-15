@@ -6,8 +6,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 import pytz
 
-from ..config.settings import get_supabase_client, CLERK_SECRET_KEY, logger
-from ..utils.clerk import get_clerk_user_data
+from ..config.settings import get_supabase_client, logger
 
 # Initialize router
 router = APIRouter(prefix="/reminder", tags=["synchronization"])
@@ -24,13 +23,13 @@ def get_users_needing_reminder() -> List[Dict]:
         
         logger.info(f"Current UTC time: {current_time_utc}")
         
-        # Get users with matching reminder time
+        # Get users with their settings and last sign in
         response = supabase.table('user_settings').select(
-            'user_id, reminder_time, enable_weekly_reminder'
+            'user_id, reminder_time, enable_weekly_reminder, users!inner(email, last_sign_in)'
         ).execute()
         
-        if response.error:
-            logger.error(f"Error fetching user settings: {response.error}")
+        if not response.data:
+            logger.info("No user settings found")
             return []
             
         users = response.data
@@ -40,7 +39,7 @@ def get_users_needing_reminder() -> List[Dict]:
             # Convert user's local reminder time to UTC
             try:
                 # Parse the reminder time
-                reminder_hour, reminder_minute = map(int, user['reminder_time'].split(':'))
+                reminder_hour, reminder_minute, _ = map(int, user['reminder_time'].split(':'))
                 
                 # Create a datetime object for today with the reminder time
                 local_time = datetime.now().replace(
@@ -62,6 +61,7 @@ def get_users_needing_reminder() -> List[Dict]:
                     logger.info(f"Found matching reminder time for user {user['user_id']}")
                     users_needing_reminder.append({
                         'user_id': user['user_id'],
+                        'email': user['users']['email'],
                         'type': 'daily'
                     })
             except Exception as e:
@@ -70,14 +70,16 @@ def get_users_needing_reminder() -> List[Dict]:
             
             # Check weekly reminder if enabled
             if user['enable_weekly_reminder']:
-                # Get user's last login
-                last_login = get_user_last_login(user['user_id'])
+                # Get user's last login from the users table
+                last_login = user['users']['last_sign_in']
                 if last_login:
-                    days_since_login = (now - last_login).days
+                    last_login_dt = datetime.fromisoformat(last_login.replace('Z', '+00:00'))
+                    days_since_login = (now - last_login_dt).days
                     logger.info(f"User {user['user_id']} last login: {last_login}, days since: {days_since_login}")
                     if days_since_login >= 7:
                         users_needing_reminder.append({
                             'user_id': user['user_id'],
+                            'email': user['users']['email'],
                             'type': 'weekly'
                         })
         
@@ -87,27 +89,9 @@ def get_users_needing_reminder() -> List[Dict]:
         logger.error(f"Error in get_users_needing_reminder: {str(e)}")
         return []
 
-def get_user_last_login(user_id: str) -> datetime:
-    """Get user's last login time from Clerk."""
-    try:
-        user_data = get_clerk_user_data(user_id)
-        if user_data and 'last_sign_in_at' in user_data:
-            return datetime.fromisoformat(user_data['last_sign_in_at'].replace('Z', '+00:00'))
-        return None
-    except Exception as e:
-        logger.error(f"Error getting last login for user {user_id}: {str(e)}")
-        return None
-
-def send_reminder_email(user_id: str, reminder_type: str) -> bool:
+def send_reminder_email(user_id: str, email: str, reminder_type: str) -> bool:
     """Send reminder email to user."""
     try:
-        user_data = get_clerk_user_data(user_id)
-        if not user_data or 'email_addresses' not in user_data:
-            logger.error(f"No email found for user {user_id}")
-            return False
-            
-        email = user_data['email_addresses'][0]['email_address']
-        
         # TODO: Implement actual email sending logic here
         # For now, just log the reminder
         logger.info(f"Sending {reminder_type} reminder to {email}")
@@ -130,6 +114,7 @@ async def check_reminders(background_tasks: BackgroundTasks):
             background_tasks.add_task(
                 send_reminder_email,
                 user['user_id'],
+                user['email'],
                 user['type']
             )
         return {"message": f"Processing reminders for {len(users)} users"}

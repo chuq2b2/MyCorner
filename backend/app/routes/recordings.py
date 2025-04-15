@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 import os
 from ..config.settings import get_supabase_client, logger
-from ..utils.clerk import get_clerk_user_data
 
 router = APIRouter(tags=["recordings"])
 
