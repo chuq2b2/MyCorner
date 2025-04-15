@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserButton, useUser } from "@clerk/clerk-react";
+import { UserButton  } from "@clerk/clerk-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,17 +7,19 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
-import { Plus, Mic, Video, BookOpenText, Menu } from "lucide-react";
+import { Plus, Mic, Video, BookOpenText, Settings } from "lucide-react";
 import AudioRecorder from "./AudioRecorder";
 import VideoRecorder from "./VideoRecorder";
 import PromptGenerator from "./PromptGenerator";
+import Setting from "./Setting";
 
 export default function NavBar() {
-  const { user } = useUser();
+  // const { user } = useUser();
   const [isAudioDialogOpen, setIsAudioDialogOpen] = useState(false);
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
   const [isPromptGeneratorOpen, setIsPromptGeneratorOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
+  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <nav className="w-full sm:w-2/3 flex items-center justify-between bg-gray-900 sm:rounded-full px-4 sm:px-6 py-3 max-w-screen-lg mx-auto">
@@ -51,6 +53,9 @@ export default function NavBar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button size="icon" onClick={() => setIsSettingOpen(true)}>
+          <Settings size={16} />
+        </Button>
 
         <UserButton />
       </div>
@@ -84,6 +89,9 @@ export default function NavBar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <Button size="icon" onClick={() => setIsSettingOpen(true)}>
+          <Settings size={16} />
+        </Button>
         <UserButton />
       </div>
 
@@ -104,6 +112,9 @@ export default function NavBar() {
         isOpen={isPromptGeneratorOpen}
         onClose={() => setIsPromptGeneratorOpen(false)}
       />
+
+      {/* Setting Dialog */}
+      <Setting isOpen={isSettingOpen} onClose={() => setIsSettingOpen(false)} />
     </nav>
   );
 }

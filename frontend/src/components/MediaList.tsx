@@ -3,16 +3,12 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
   CardTitle,
 } from "./ui/card";
 import { Loader2, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useUser } from "@clerk/clerk-react";
 import MediaLayout from "./layouts/MediaLayout";
-import { Button } from "./ui/button";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -34,7 +30,6 @@ export default function MediaList() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("audio");
   const { user, isLoaded } = useUser();
 
   useEffect(() => {

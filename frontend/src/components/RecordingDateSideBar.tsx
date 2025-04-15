@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { CircleSmall } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import { toZonedTime } from "date-fns-tz";
-import { time } from "console";
 
 interface Props {
   dates: string[];
