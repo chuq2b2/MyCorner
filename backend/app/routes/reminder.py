@@ -7,6 +7,7 @@ from typing import List, Dict
 import pytz
 
 from ..config.settings import get_supabase_client, logger
+from ..utils.email import send_email, create_reminder_email_body
 
 # Initialize router
 router = APIRouter(prefix="/reminder", tags=["synchronization"])
@@ -92,11 +93,16 @@ def get_users_needing_reminder() -> List[Dict]:
 def send_reminder_email(user_id: str, email: str, reminder_type: str) -> bool:
     """Send reminder email to user."""
     try:
-        # TODO: Implement actual email sending logic here
-        # For now, just log the reminder
-        logger.info(f"Sending {reminder_type} reminder to {email}")
+        subject = "MyCorner: Daily Reminder to Login!" if reminder_type == "daily" else "MyCorner Weekly Reminder: We miss you!"
+        body = create_reminder_email_body(reminder_type)
         
-        return True
+        success = send_email(email, subject, body)
+        if success:
+            logger.info(f"Successfully sent {reminder_type} reminder to {email}")
+        else:
+            logger.error(f"Failed to send {reminder_type} reminder to {email}")
+            
+        return success
     except Exception as e:
         logger.error(f"Error sending reminder to user {user_id}: {str(e)}")
         return False
