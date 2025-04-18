@@ -10,7 +10,8 @@ import {
   DialogFooter,
 } from "./ui/dialog";
 import { useUser } from "@clerk/clerk-react";
-import { Progress } from "./ui/progress"; // Add this if using a custom progress component
+import { Progress } from "./ui/progress"; 
+import OPTIONS from "./../lib/options";
 
 interface UploadDialogProps {
   isOpen: boolean;
@@ -20,18 +21,19 @@ interface UploadDialogProps {
   onUploadComplete: () => void;
 }
 
-const OPTIONS: Option[] = [
-  { label: "TRIGGER WARNING", value: "Trigger Warning" },
-  { label: "Emotional", value: "Emotional" },
-  { label: "Inspiring", value: "Inspiring" },
-  { label: "Growth", value: "Growth" },
-  { label: "Sad", value: "Sad" },
-  { label: "Love", value: "Love" },
-  { label: "Family", value: "Family" },
-  { label: "Work", value: "Work" },
-  { label: "Funny", value: "Funny" },
-  { label: "Depression", value: "Depression", disable: true },
-];
+// const OPTIONS: Option[] = [
+//   { label: "TRIGGER WARNING", value: "Trigger Warning" },
+//   { label: "Emotional", value: "Emotional" },
+//   { label: "Inspiring", value: "Inspiring" },
+//   { label: "Growth", value: "Growth" },
+//   { label: "Sad", value: "Sad" },
+//   { label: "Love", value: "Love" },
+//   { label: "Family", value: "Family" },
+//   { label: "Work", value: "Work" },
+//   { label: "Funny", value: "Funny" },
+//   { label: "Happy", value: "Happy" },
+//   { label: "Depression", value: "Depression", disable: true },
+// ];
 
 export default function UploadDialog({
   isOpen,

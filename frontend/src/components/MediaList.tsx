@@ -26,6 +26,7 @@ export default function MediaList() {
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [filteredRecordings, setFilteredRecordings] = useState<Recording[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const { user, isLoaded } = useUser();
@@ -33,7 +34,6 @@ export default function MediaList() {
   useEffect(() => {
     if (isLoaded && user) {
       fetchRecordings();
-      console.log("Current user ID:", user.id);
     }
   }, [isLoaded, user]);
 
@@ -71,18 +71,23 @@ export default function MediaList() {
   };
 
   useEffect(() => {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    let filtered = recordings;
+  
     if (selectedDate) {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      setFilteredRecordings(
-        recordings.filter((r) => {
-          const localDate = toZonedTime(r.created_at, timezone);
-          return format(localDate, "yyyy-MM-dd") === selectedDate;
-        })
-      );
-    } else {
-      setFilteredRecordings(recordings);
+      filtered = filtered.filter((r) => {
+        const localDate = toZonedTime(r.created_at, timezone);
+        return format(localDate, "yyyy-MM-dd") === selectedDate;
+      });
     }
-  }, [selectedDate, recordings]);
+  
+    if (selectedTag) {
+      filtered = filtered.filter((r) => r.tags?.includes(selectedTag));
+    }
+  
+    setFilteredRecordings(filtered);
+  }, [selectedDate, selectedTag, recordings]);
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const availableDates = Array.from(
@@ -200,12 +205,14 @@ export default function MediaList() {
     <MediaLayout
       dates={availableDates}
       selectedDate={selectedDate}
+      selectedTag={selectedTag}
       onDateSelect={setSelectedDate}
+      onTagSelect={setSelectedTag}
     >
       <div className="px-4 py-8">
         {filteredRecordings.length === 0 ? (
           <p className="text-center text-gray-500">
-            No recordings for this date.
+            No recordings for this tag.
           </p>
         ) : (
           <div className="w-full">
