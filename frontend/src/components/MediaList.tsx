@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import {
-  Card,
-  CardTitle,
-} from "./ui/card";
-import { Loader2, X } from "lucide-react";
+import { Card, CardTitle } from "./ui/card";
+import { Loader2, Tag, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useUser } from "@clerk/clerk-react";
 import MediaLayout from "./layouts/MediaLayout";
@@ -21,6 +18,7 @@ interface Recording {
   file_url: string;
   file_type: "audio" | "video";
   note: string | null;
+  tags: string[] | null;
   created_at: string;
 }
 
@@ -54,8 +52,7 @@ export default function MediaList() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
-      console.log("Supabase data:", data);
-      console.log("Supabase error:", error);
+
       if (error) throw error;
 
       const audio = data.filter((r) => r.file_type === "audio");
@@ -67,9 +64,7 @@ export default function MediaList() {
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
       );
-      console.log("Final recordings to render:", recordings);
     } catch (error) {
-      console.error("Error fetching recordings:", error);
     } finally {
       setIsLoading(false);
     }
@@ -137,8 +132,6 @@ export default function MediaList() {
     return (
       <Card key={recording.id} className="mb-4 p-4 mx-8 bg-amber-50 relative">
         <button
-          // variant="ghost"
-          // size="icon"
           className="absolute right-2 top-2 bg-amber-50 hover:bg-red-300"
           onClick={() => handleDeleteRecording(recording)}
         >
@@ -149,18 +142,18 @@ export default function MediaList() {
           <div className="w-full md:w-1/2 ">
             {recording.file_type === "video" ? (
               <div className="aspect-video w-full max-w-xl rounded overflow-hidden">
-              <video controls className="w-full h-full object-cover">
-                <source src={recording.file_url} type="video/webm" />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          ) : (
-            <div className="w-full bg-gray-800 rounded-lg p-4 flex items-center justify-center">
-              <audio controls className="max-w-full">
-                <source src={recording.file_url} type="audio/webm" />
-                Your browser does not support the audio tag.
-              </audio>
-            </div>
+                <video controls className="w-full h-full object-cover">
+                  <source src={recording.file_url} type="video/webm" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            ) : (
+              <div className="w-full bg-gray-800 rounded-lg p-4 flex items-center justify-center">
+                <audio controls className="max-w-full">
+                  <source src={recording.file_url} type="audio/webm" />
+                  Your browser does not support the audio tag.
+                </audio>
+              </div>
             )}
           </div>
 
@@ -175,6 +168,19 @@ export default function MediaList() {
               </p>
             ) : (
               <p className="text-sm text-gray-400 italic">No notes added.</p>
+            )}
+            {recording.tags && recording.tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {recording.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-200 text-black text-xs font-medium"
+                  >
+                    <Tag className="w-3 h-3 mr-1" />
+                    {tag}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
         </div>

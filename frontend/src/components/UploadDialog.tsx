@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import MultipleSelector, { Option } from "@/components/ui/multiple-selector";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,19 @@ interface UploadDialogProps {
   onUploadComplete: () => void;
 }
 
+const OPTIONS: Option[] = [
+  { label: "TRIGGER WARNING", value: "Trigger Warning" },
+  { label: "Emotional", value: "Emotional" },
+  { label: "Inspiring", value: "Inspiring" },
+  { label: "Growth", value: "Growth" },
+  { label: "Sad", value: "Sad" },
+  { label: "Love", value: "Love" },
+  { label: "Family", value: "Family" },
+  { label: "Work", value: "Work" },
+  { label: "Funny", value: "Funny" },
+  { label: "Depression", value: "Depression", disable: true },
+];
+
 export default function UploadDialog({
   isOpen,
   onClose,
@@ -29,6 +43,7 @@ export default function UploadDialog({
   const [note, setNote] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedTags, setSelectedTags] = useState<Option[]>([]);
   const { user } = useUser();
   const typeToSend = fileType;
 
@@ -45,7 +60,12 @@ export default function UploadDialog({
     if (note) {
       formData.append("note", note);
     }
-
+    if (selectedTags.length > 0) {
+      const tagsArray = selectedTags.map((tag) => tag.value); // ["Love", "Family", etc.]
+      console.log(tagsArray);
+      formData.append("tags", JSON.stringify(tagsArray));
+    }
+    
     const xhr = new XMLHttpRequest();
 
     xhr.upload.onprogress = (event) => {
@@ -75,8 +95,6 @@ export default function UploadDialog({
 
     xhr.open("POST", "http://localhost:8000/recordings/upload");
     xhr.send(formData);
-
-    
   };
 
   return (
@@ -92,6 +110,19 @@ export default function UploadDialog({
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
+          <div className="w-full px-10">
+            <MultipleSelector
+              selectFirstItem={false}
+              defaultOptions={OPTIONS}
+              placeholder="Select tags..."
+              onChange={setSelectedTags}
+              emptyIndicator={
+                <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                  no results found.
+                </p>
+              }
+            />
+          </div>
           {isUploading && (
             <div>
               <Progress value={uploadProgress} />
