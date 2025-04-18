@@ -3,9 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
+import aiohttp
+import os
 
 from .config.settings import CORS_ORIGINS, validate_config, logger
-from .routes import users, webhooks, test, sync, prompts
+from .routes import (
+    users_router,
+    test_router,
+    sync_router,
+    prompts_router,
+    recordings_router,
+    recordings,
+    reminder
+)
 from .routes.sync import perform_user_sync
 
 # Validate configuration
@@ -31,11 +41,30 @@ app.add_middleware(
 scheduler = AsyncIOScheduler()
 
 # Include routers
-app.include_router(users.router)
-app.include_router(webhooks.router)
-app.include_router(test.router)
-app.include_router(sync.router)
-app.include_router(prompts.router)
+app.include_router(users_router)
+app.include_router(test_router)
+app.include_router(sync_router)
+app.include_router(prompts_router)
+app.include_router(recordings_router, prefix="/recordings", tags=["recordings"])
+app.include_router(recordings.router)
+app.include_router(reminder.router)
+
+async def check_reminders():
+    """Check for reminders that need to be sent."""
+    try:
+        logger.info("Running reminder check...")
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://localhost:8000/reminder/check-reminders",
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status != 200:
+                    logger.error(f"Error checking reminders: {await response.text()}")
+                else:
+                    result = await response.json()
+                    logger.info(f"Reminder check completed successfully: {result}")
+    except Exception as e:
+        logger.error(f"Error in check_reminders scheduler: {str(e)}")
 
 # Log application startup
 @app.on_event("startup")
@@ -51,8 +80,22 @@ async def startup_event():
         replace_existing=True,
     )
     
+    # Add job to check reminders every minute
+    scheduler.add_job(
+        check_reminders,
+        trigger=CronTrigger(minute="*"),
+        id="check_reminders",
+        name="Check and send reminders",
+        replace_existing=True
+    )
+    
     # Start the scheduler
     scheduler.start()
+    logger.info("Scheduler started")
+    
+    # Log all scheduled jobs
+    for job in scheduler.get_jobs():
+        logger.info(f"Scheduled job: {job.name} (next run: {job.next_run_time})")
 
 @app.on_event("shutdown")
 async def shutdown_event():

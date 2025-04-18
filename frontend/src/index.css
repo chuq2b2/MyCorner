@@ -62,10 +62,9 @@ h1 {
   font-family: 'Playwrite AR', sans-serif;
 }
 
-
 button {
   border-radius: calc(infinity * 1px);
-  border: 3px solid black;
+  border: 3px solid #111827;
   padding: 0.2em 1.2em;
   font-size: 1em;
   font-weight: 500;
@@ -77,6 +76,41 @@ button {
 button:hover {
   border-color: whitesmoke;
   color: tomato;
+}
+
+.button-star {
+  border-radius: calc(infinity * 1px);
+  border: 3px solid black;
+  padding: 0.2em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  /* color: rgba(255, 255, 255, 0.87); */
+}
+.button-star:hover {
+  border-color: whitesmoke;
+  color: tomato;
+}
+
+.button-select {
+  padding: 0.2em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: text-decoration 0.25s, color 0.25s;
+  border: none;
+  text-decoration: none;
+}
+
+.button-select:hover {
+  text-decoration: underline;
+}
+
+.button-select.selected {
+  text-decoration: underline;
 }
 
 .stars-container {

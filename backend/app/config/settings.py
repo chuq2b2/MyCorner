@@ -13,8 +13,8 @@ load_dotenv(env_path)
 
 # Clerk settings
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
-CLERK_WEBHOOK_SECRET = os.getenv("CLERK_WEBHOOK_SECRET", "")
-
+if not CLERK_SECRET_KEY:
+    logger.warning("CLERK_SECRET_KEY not found in environment variables")
 # Supabase settings
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
