@@ -41,13 +41,16 @@ export default function Setting({ isOpen, onClose }: SettingProps) {
       const { data, error } = await supabase
         .from("user_settings")
         .select("reminder_time, enable_weekly_reminder")
-        .eq("user_id", user?.id)
-        .single();
+        .eq("user_id", user?.id);
 
       if (error) throw error;
-      if (data) {
-        setReminderTime(data.reminder_time);
-        setEnableWeeklyReminder(data.enable_weekly_reminder || false);
+
+      if (data && data.length > 0) {
+        // If you expect multiple rows, you need to pick which one to use
+        const setting = data[0]; // Example: just pick the first one for now
+
+        setReminderTime(setting.reminder_time);
+        setEnableWeeklyReminder(setting.enable_weekly_reminder || false);
       }
     } catch (error) {
       console.error("Error fetching reminder settings:", error);
@@ -59,32 +62,20 @@ export default function Setting({ isOpen, onClose }: SettingProps) {
 
     setIsSaving(true);
     try {
-      // First try to update existing record
-      const { error: updateError } = await supabase
-        .from("user_settings")
-        .update({
-          reminder_time: reminderTime,
-          enable_weekly_reminder: enableWeeklyReminder,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-
-      // If no record exists, insert a new one
-      if (updateError?.code === "PGRST116") {
-        const { error: insertError } = await supabase
-          .from("user_settings")
-          .insert({
+      const { error } = await supabase.from("user_settings").upsert(
+        [
+          {
             user_id: user.id,
             reminder_time: reminderTime,
             enable_weekly_reminder: enableWeeklyReminder,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          },
+        ],
+        { onConflict: "user_id" }
+      );
 
-        if (insertError) throw insertError;
-      } else if (updateError) {
-        throw updateError;
-      }
+      if (error) throw error;
 
       onClose();
     } catch (error) {
