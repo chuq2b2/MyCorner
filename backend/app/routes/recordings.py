@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header, Form
 from typing import Optional
 from datetime import datetime
+import json
 import os
 from ..config.settings import get_supabase_client, logger
 
@@ -14,6 +15,7 @@ async def upload_recording(
     file: UploadFile = File(...),
     file_type: str = Form(...),
     note: str = Form(None),
+    tags: Optional[str] = Form(None),
     user_id: str = Form(...),
 ):
     try:
@@ -42,6 +44,10 @@ async def upload_recording(
         # Get the public URL
         public_url = supabase.storage.from_("recordings").get_public_url(filename)
         print("Note received:", note)
+
+        parsed_tags = []
+        if tags:
+            parsed_tags = json.loads(tags)
         # Save to recordings table
         db_response = supabase.table("recordings").insert({
             "created_at": datetime.now().isoformat(),
@@ -49,6 +55,7 @@ async def upload_recording(
             "file_url": public_url,
             "file_type": file_type,
             "note": note,
+            "tags": parsed_tags,
         }).execute()
 
         if not db_response.data:
